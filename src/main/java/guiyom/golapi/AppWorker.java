@@ -10,6 +10,8 @@ import com.esotericsoftware.kryo.io.Output;
 import com.rabbitmq.client.Delivery;
 import guiyom.cellautomata.CellAutomata;
 import guiyom.cellautomata.output.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -19,6 +21,8 @@ import java.time.Instant;
 
 public final class AppWorker {
 
+    private static final Logger log = LoggerFactory.getLogger(AppWorker.class);
+
     /**
      * Receives jobs and computes game of life rounds
      */
@@ -26,15 +30,26 @@ public final class AppWorker {
 
         try {
             Launcher.getAmqpChannel().basicConsume(Launcher.INPUT_QUEUE, false, this::handleDelivery, tag -> {});
-        } catch (IOException e) {
+
+            log.info("Registered consumer -> putting main thread to sleep");
+
+            // Sleep
+            Object obj = new Object();
+            synchronized (obj) {
+                obj.wait();
+            }
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     private void handleDelivery(String tag, Delivery delivery) {
 
+        log.info("Received job !");
+
         Input in = new Input(delivery.getBody());
         Job job = Launcher.getKryo().readObject(in, Job.class);
+        log.info("Job = {}", job);
         CellAutomata gol = new CellAutomata(job.getInit(), job.getWidth(), job.getHeight(), job.getRule(), job.isBound());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
@@ -59,7 +74,9 @@ public final class AppWorker {
                 return;
         }
         try {
+            log.info("Started computing ...");
             gol.record(output, job.getNumRounds(), true);
+            log.info("Finished computing !");
 
             if (output instanceof Closeable)
                 ((Closeable) output).close();
@@ -76,6 +93,7 @@ public final class AppWorker {
                     b2ContentSource).build();
 
             B2FileVersion file = Launcher.getB2client().uploadSmallFile(uploadRequest);
+            log.info("Uploaded resulting file !");
             JobResult result = new JobResult();
             result.setId(job.getId());
             result.setResultUrl(new URL(Launcher.getB2client().getDownloadByIdUrl(file.getFileId())));

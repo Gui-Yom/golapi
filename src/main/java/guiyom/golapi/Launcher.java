@@ -7,6 +7,8 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import guiyom.cellautomata.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +19,7 @@ public final class Launcher {
 
     public static final String INPUT_QUEUE = "input";
     public static final String OUTPUT_QUEUE = "output";
+    private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     private static final String CLOUDAMQP_URL = System.getenv("CLOUDAMQP_URL");
     private static final String CLOUDAMQP_APIKEY = System.getenv("CLOUDAMQP_APIKEY");
     private static final String B2_APIKEY_ID = System.getenv("B2_APIKEY_ID");
@@ -49,6 +52,7 @@ public final class Launcher {
             final URI rabbitMqUrl;
             try {
                 rabbitMqUrl = new URI(CLOUDAMQP_URL);
+                log.info("RabbitMQ URL = {}", rabbitMqUrl);
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
@@ -66,12 +70,15 @@ public final class Launcher {
             } catch (IOException | TimeoutException e) {
                 e.printStackTrace();
             }
+            log.info("Connected to AMPQ server !");
 
             kryo.register(Job.class);
             kryo.register(JobResult.class);
             kryo.register(Rule.class);
+            log.info("Registered serialized classes !");
 
             b2client = B2StorageClientFactory.createDefaultFactory().create(B2_APIKEY_ID, B2_APIKEY, "golapi/1.0.0");
+            log.info("Initialized connection to bucket storage !");
 
             if (args[0].equals("web"))
                 new App().main();

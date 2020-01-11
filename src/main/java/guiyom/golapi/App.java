@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static spark.Spark.*;
 
-public class App {
+public final class App {
 
     /*
     POST /job -> Schedule a job, returns jobid
