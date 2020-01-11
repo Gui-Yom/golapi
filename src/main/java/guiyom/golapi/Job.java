@@ -17,7 +17,7 @@ public class Job {
     private int numRounds = 1;
     private Rule rule = Rule.Square2D.CONWAY.getRule();
     private boolean bound = true;
-    private String output = "png";
+    private String output = "gif";
     private int delay = 500;
     private int repeats = 0;
 
