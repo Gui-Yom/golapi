@@ -10,6 +10,7 @@ module golapi {
     requires com.esotericsoftware.kryo;
     requires b2.sdk.core;
     requires b2.sdk.httpclient;
+    requires logback.classic;
 
     opens guiyom.golapi to com.google.gson;
 }

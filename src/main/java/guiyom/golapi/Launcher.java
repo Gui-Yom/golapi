@@ -1,5 +1,6 @@
 package guiyom.golapi;
 
+import ch.qos.logback.classic.Level;
 import com.backblaze.b2.client.B2StorageClient;
 import com.backblaze.b2.client.B2StorageClientFactory;
 import com.esotericsoftware.kryo.Kryo;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.TimeoutException;
 
 public final class Launcher {
@@ -49,6 +51,8 @@ public final class Launcher {
 
         if (args != null && args.length > 0) {
 
+            ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.INFO);
+
             final URI rabbitMqUrl;
             try {
                 rabbitMqUrl = new URI(CLOUDAMQP_URL);
@@ -75,6 +79,8 @@ public final class Launcher {
             kryo.register(Job.class);
             kryo.register(JobResult.class);
             kryo.register(Rule.class);
+            kryo.register(byte[].class);
+            kryo.register(URL.class);
             log.info("Registered serialized classes !");
 
             b2client = B2StorageClientFactory.createDefaultFactory().create(B2_APIKEY_ID, B2_APIKEY, "golapi/1.0.0");
