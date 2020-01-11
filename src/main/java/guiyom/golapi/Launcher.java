@@ -87,6 +87,7 @@ public final class Launcher {
             kryo.register(Class.class);
             kryo.register(SerializedLambda.class);
             kryo.register(ClosureSerializer.Closure.class, new ClosureSerializer());
+            kryo.register(Rule.Square2D.class);
             log.info("Registered serialized classes !");
 
             b2client = B2StorageClientFactory.createDefaultFactory().create(B2_APIKEY_ID, B2_APIKEY, "golapi/1.0.0");
