@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.backblaze.b2.client.B2StorageClient;
 import com.backblaze.b2.client.B2StorageClientFactory;
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.serializers.ClosureSerializer;
 import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.invoke.SerializedLambda;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -81,6 +83,10 @@ public final class Launcher {
             kryo.register(Rule.class);
             kryo.register(byte[].class);
             kryo.register(URL.class);
+            kryo.register(Object[].class);
+            kryo.register(Class.class);
+            kryo.register(SerializedLambda.class);
+            kryo.register(ClosureSerializer.Closure.class, new ClosureSerializer());
             log.info("Registered serialized classes !");
 
             b2client = B2StorageClientFactory.createDefaultFactory().create(B2_APIKEY_ID, B2_APIKEY, "golapi/1.0.0");

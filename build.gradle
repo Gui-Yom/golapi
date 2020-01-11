@@ -31,7 +31,7 @@ dependencies {
     implementation "com.esotericsoftware:kryo:5.0.0-RC4"
     implementation "com.google.code.gson:gson:2.8.6"
     implementation "com.rabbitmq:amqp-client:5.8.0"
-    implementation "com.github.Gui-Yom:cellautomata:2.0.0"
+    implementation "com.github.Gui-Yom:cellautomata:2.1.0"
     implementation "com.backblaze.b2:b2-sdk-core:3.1.0"
     implementation "com.backblaze.b2:b2-sdk-httpclient:3.1.0"
 
