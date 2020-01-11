@@ -71,6 +71,18 @@ public final class App {
             if (bound != null)
                 job.setBound(Boolean.parseBoolean(bound));
 
+            final String output = q.queryParams("output");
+            if (bound != null)
+                job.setOutput(output);
+
+            final String delay = q.queryParams("delay");
+            if (bound != null)
+                job.setDelay(Integer.parseInt(delay));
+
+            final String repeats = q.queryParams("repeats");
+            if (bound != null)
+                job.setRepeats(Integer.parseInt(repeats));
+
             log.info("Received a new job.");
 
             if (scheduleJob(job)) {

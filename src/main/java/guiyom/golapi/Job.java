@@ -17,9 +17,9 @@ public class Job {
     private int numRounds = 1;
     private Rule rule = Rule.Square2D.CONWAY.getRule();
     private boolean bound = true;
-    private String output;
-    private int delay;
-    private int repeats;
+    private String output = "png";
+    private int delay = 500;
+    private int repeats = 0;
 
     public void setInitFromImg(BufferedImage img) {
         setInit(InputHelper.fromImage(img));
