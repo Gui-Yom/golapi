@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "com.dua3.gradle.jpms" version "1.0-BETA7"
+    id "io.freefair.lombok" version "4.1.6"
+}
+
+group "guiyom.golapi"
+version "1.0.0"
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    implementation "org.slf4j:slf4j-api:1.7.30"
+    runtimeOnly "ch.qos.logback:logback-classic:1.2.3"
+
+    implementation "com.sparkjava:spark-core:2.9.1"; constraints {
+        implementation "org.eclipse.jetty:jetty-webapp:9.4.25.v20191220"
+        implementation "org.eclipse.jetty:jetty-server:9.4.25.v20191220"
+        implementation "org.eclipse.jetty.websocket:websocket-server:9.4.25.v20191220"
+    }
+
+    implementation "com.esotericsoftware:kryo:5.0.0-RC4"
+    implementation "com.google.code.gson:gson:2.8.6"
+    implementation "com.rabbitmq:amqp-client:5.8.0"
+    implementation "com.github.Gui-Yom:cellautomata:2.0.0"
+    implementation "com.backblaze.b2:b2-sdk-core:3.1.0"
+    implementation "com.backblaze.b2:b2-sdk-httpclient:3.1.0"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.5.2"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.5.2"
+}
+
+application {
+    mainClassName = "guiyom.golapi.Launcher"
+}
+
+shadowJar {
+    archiveFileName = "golapi.jar"
+    manifest {
+        attributes "Main-Class": mainClassName
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jigsaw {
+    testLibraryModule = 'org.junit.jupiter.api'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
