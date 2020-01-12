@@ -28,7 +28,7 @@ dependencies {
         implementation "org.eclipse.jetty.websocket:websocket-server:9.4.25.v20191220"
     }
 
-    implementation "com.esotericsoftware:kryo:5.0.0-RC4"
+    implementation "org.msgpack:jackson-dataformat-msgpack:0.8.20"
     implementation "com.google.code.gson:gson:2.8.6"
     implementation "com.rabbitmq:amqp-client:5.8.0"
     implementation "com.github.Gui-Yom:cellautomata:2.1.0"

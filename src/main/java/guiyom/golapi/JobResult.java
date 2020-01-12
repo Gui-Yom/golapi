@@ -6,7 +6,6 @@ import java.net.URL;
 
 @Data
 public class JobResult {
-
     private String id;
     private URL resultUrl;
 }

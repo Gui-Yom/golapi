@@ -3,33 +3,28 @@ package guiyom.golapi;
 import ch.qos.logback.classic.Level;
 import com.backblaze.b2.client.B2StorageClient;
 import com.backblaze.b2.client.B2StorageClientFactory;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.serializers.ClosureSerializer;
 import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
-import guiyom.cellautomata.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.invoke.SerializedLambda;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.concurrent.TimeoutException;
 
 public final class Launcher {
 
     public static final String INPUT_QUEUE = "input";
     public static final String OUTPUT_QUEUE = "output";
+    public static final String B2_BUCKET_ID = "9ccec72b1f395ddc6df10816";
     private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     private static final String CLOUDAMQP_URL = System.getenv("CLOUDAMQP_URL");
     private static final String CLOUDAMQP_APIKEY = System.getenv("CLOUDAMQP_APIKEY");
     private static final String B2_APIKEY_ID = System.getenv("B2_APIKEY_ID");
     private static final String B2_APIKEY = System.getenv("B2_APIKEY");
     private static final Gson gson = new Gson();
-    private static final Kryo kryo = new Kryo();
     private static Channel amqpChannel;
     private static B2StorageClient b2client;
 
@@ -41,10 +36,6 @@ public final class Launcher {
         return gson;
     }
 
-    public static Kryo getKryo() {
-        return kryo;
-    }
-
     public static Channel getAmqpChannel() {
         return amqpChannel;
     }
@@ -53,6 +44,7 @@ public final class Launcher {
 
         if (args != null && args.length > 0) {
 
+            // Set log level to info
             ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.INFO);
 
             final URI rabbitMqUrl;
@@ -73,22 +65,12 @@ public final class Launcher {
                 amqpChannel.queueDeclare(INPUT_QUEUE, false, false, false, null);
                 amqpChannel.queueDeclare(OUTPUT_QUEUE, false, false, false, null);
                 amqpChannel.basicQos(1);
+                amqpChannel.queuePurge(INPUT_QUEUE);
+                amqpChannel.queuePurge(OUTPUT_QUEUE);
             } catch (IOException | TimeoutException e) {
                 e.printStackTrace();
             }
             log.info("Connected to AMPQ server !");
-
-            kryo.register(Job.class);
-            kryo.register(JobResult.class);
-            kryo.register(Rule.class);
-            kryo.register(byte[].class);
-            kryo.register(URL.class);
-            kryo.register(Object[].class);
-            kryo.register(Class.class);
-            kryo.register(SerializedLambda.class);
-            kryo.register(ClosureSerializer.Closure.class, new ClosureSerializer());
-            kryo.register(Rule.Square2D.class);
-            log.info("Registered serialized classes !");
 
             b2client = B2StorageClientFactory.createDefaultFactory().create(B2_APIKEY_ID, B2_APIKEY, "golapi/1.0.0");
             log.info("Initialized connection to bucket storage !");

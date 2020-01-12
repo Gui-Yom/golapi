@@ -1,17 +1,15 @@
 package guiyom.golapi;
 
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.rabbitmq.client.Delivery;
-import guiyom.cellautomata.Rule;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Vector;
@@ -61,7 +59,7 @@ public final class App {
 
             final String rule = q.queryParams("rule");
             if (rule != null)
-                job.setRule(Rule.Square2D.valueOf(rule).getRule());
+                job.setRule(rule);
 
             final String numRounds = q.queryParams("numRounds");
             if (numRounds != null)
@@ -143,10 +141,10 @@ public final class App {
 
     private boolean scheduleJob(Job job) {
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
-            Output out = new Output(baos);
-            Launcher.getKryo().writeObject(out, job);
-            Launcher.getAmqpChannel().basicPublish("", Launcher.INPUT_QUEUE, null, baos.toByteArray());
+            Launcher.getAmqpChannel().basicPublish("",
+                    Launcher.INPUT_QUEUE,
+                    null,
+                    new ObjectMapper(new MessagePackFactory()).writeValueAsBytes(job));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -157,8 +155,12 @@ public final class App {
     }
 
     private void callbackJobFinished(String tag, Delivery delivery) {
-        Input in = new Input(delivery.getBody());
-        JobResult result = Launcher.getKryo().readObject(in, JobResult.class);
+        JobResult result = null;
+        try {
+            result = new ObjectMapper(new MessagePackFactory()).readValue(delivery.getBody(), JobResult.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         jobResults.put(result.getId(), result);
         log.info("Job {} has finished.", result.getId());
 

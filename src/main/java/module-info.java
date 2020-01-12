@@ -7,7 +7,8 @@ module golapi {
     requires com.rabbitmq.client;
     requires lombok;
     requires com.google.gson;
-    requires com.esotericsoftware.kryo;
+    requires jackson.dataformat.msgpack;
+    requires com.fasterxml.jackson.databind;
     requires b2.sdk.core;
     requires b2.sdk.httpclient;
     requires logback.classic;

@@ -5,11 +5,12 @@ import com.backblaze.b2.client.contentSources.B2ContentSource;
 import com.backblaze.b2.client.exceptions.B2Exception;
 import com.backblaze.b2.client.structures.B2FileVersion;
 import com.backblaze.b2.client.structures.B2UploadFileRequest;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Delivery;
 import guiyom.cellautomata.CellAutomata;
+import guiyom.cellautomata.Rule;
 import guiyom.cellautomata.output.*;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,15 +48,27 @@ public final class AppWorker {
 
         log.info("Received job !");
 
-        Input in = new Input(delivery.getBody());
-        Job job = Launcher.getKryo().readObject(in, Job.class);
-        log.info("Job = {}", job);
-        CellAutomata gol = new CellAutomata(job.getInit(), job.getWidth(), job.getHeight(), job.getRule(), job.isBound());
+        ObjectMapper mapper = new ObjectMapper(new MessagePackFactory());
+
+        Job job = null;
+        try {
+            job = mapper.readValue(delivery.getBody(), Job.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        log.info("Job id = {}", job.getId());
+
+        CellAutomata gol = new CellAutomata(job.getInit(),
+                job.getWidth(),
+                job.getHeight(),
+                Rule.Square2D.valueOf(job.getRule()).getRule(),
+                job.isBound());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
 
         AutomataOutput output;
-
+        // This is resolved by switch expressions in java 12
         switch (job.getOutput()) {
             case "gif":
                 output = new OutputGIF(baos, job.getDelay(), job.getRepeats());
@@ -87,7 +100,7 @@ public final class AppWorker {
                                                       .setSrcLastModifiedMillisOrNull(Instant.now().toEpochMilli())
                                                       .build();
             B2UploadFileRequest uploadRequest = B2UploadFileRequest.builder(
-                    "golapi",
+                    Launcher.B2_BUCKET_ID,
                     fileName,
                     getContentType(job.getOutput()),
                     b2ContentSource).build();
@@ -97,10 +110,10 @@ public final class AppWorker {
             JobResult result = new JobResult();
             result.setId(job.getId());
             result.setResultUrl(new URL(Launcher.getB2client().getDownloadByIdUrl(file.getFileId())));
-            ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-            Output out = new Output(baos2);
-            Launcher.getKryo().writeObject(out, job);
-            Launcher.getAmqpChannel().basicPublish("", Launcher.OUTPUT_QUEUE, null, baos2.toByteArray());
+            Launcher.getAmqpChannel().basicPublish("",
+                    Launcher.OUTPUT_QUEUE,
+                    null,
+                    mapper.writeValueAsBytes(result));
             Launcher.getAmqpChannel().basicAck(delivery.getEnvelope().getDeliveryTag(), false);
         } catch (IOException | B2Exception e) {
             e.printStackTrace();
